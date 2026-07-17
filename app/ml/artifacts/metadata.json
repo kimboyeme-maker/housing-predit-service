@@ -1,0 +1,71 @@
+{
+  "model_type": "LinearRegression",
+  "target": "price",
+  "features": [
+    "square_footage",
+    "bedrooms",
+    "bathrooms",
+    "year_built",
+    "lot_size",
+    "distance_to_city_center",
+    "school_rating"
+  ],
+  "coefficients": {
+    "square_footage": -174.7313,
+    "bedrooms": -7844.2834,
+    "bathrooms": 1068.8016,
+    "year_built": 2220.8126,
+    "lot_size": 41.8441,
+    "distance_to_city_center": 19602.8715,
+    "school_rating": 25338.6008
+  },
+  "intercept": -4442157.3734,
+  "metrics": {
+    "r2": 0.9811,
+    "mae": 7916.2,
+    "rmse": 10277.05,
+    "cv_r2_mean": 0.9859,
+    "n_train": 40,
+    "n_test": 10
+  },
+  "feature_stats": {
+    "square_footage": {
+      "min": 980.0,
+      "max": 2400.0,
+      "mean": 1690.2
+    },
+    "bedrooms": {
+      "min": 2.0,
+      "max": 4.0,
+      "mean": 3.04
+    },
+    "bathrooms": {
+      "min": 1.0,
+      "max": 3.0,
+      "mean": 1.85
+    },
+    "year_built": {
+      "min": 1978.0,
+      "max": 2012.0,
+      "mean": 1996.26
+    },
+    "lot_size": {
+      "min": 4400.0,
+      "max": 10500.0,
+      "mean": 7232.0
+    },
+    "distance_to_city_center": {
+      "min": 2.1,
+      "max": 8.2,
+      "mean": 4.64
+    },
+    "school_rating": {
+      "min": 6.5,
+      "max": 9.1,
+      "mean": 7.77
+    }
+  },
+  "trained_at": "2026-07-17T05:20:19.540694+00:00",
+  "version": "1",
+  "dataset_rows": 50
+}

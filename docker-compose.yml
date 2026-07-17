@@ -1,0 +1,20 @@
+# Backend-only compose for local run / VPS deployment.
+# Frontend is deployed separately (Vercel) and points at this service via VITE_API_URL.
+services:
+  api:
+    build: .
+    image: ghcr.io/kimboyeme-maker/housing-price-predit:latest
+    container_name: housing-price-api
+    ports:
+      - "8000:8000"
+    environment:
+      HPP_LOG_LEVEL: INFO
+      # Restrict CORS to your frontend origin in production, e.g. https://your-app.vercel.app
+      HPP_CORS_ORIGINS: "*"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

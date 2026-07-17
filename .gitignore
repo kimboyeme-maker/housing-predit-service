@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+uv.lock
+
+# Env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+
+# NOTE: app/ml/artifacts/model.pkl + metadata.json are intentionally committed.

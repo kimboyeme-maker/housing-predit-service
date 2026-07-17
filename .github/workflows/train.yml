@@ -1,0 +1,39 @@
+name: Retrain Model
+
+# Manually triggered retraining. Runs train.py and commits the refreshed
+# model.pkl + metadata.json back to the repo so the next build/deploy ships them.
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you retraining?"
+        required: false
+        default: "manual retrain"
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Retrain
+        run: uv run python train.py
+
+      - name: Sanity test on fresh artifacts
+        run: uv run pytest -q
+
+      - name: Commit refreshed artifacts
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(model): retrain artifacts (${{ github.event.inputs.reason }})"
+          file_pattern: app/ml/artifacts/model.pkl app/ml/artifacts/metadata.json
