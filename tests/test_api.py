@@ -52,10 +52,25 @@ def test_predict_batch():
     assert len(r.json()["predictions"]) == 2
 
 
+def test_single_and_batch_paths_produce_equivalent_predictions():
+    """A/B contract check: batching must not change a row's prediction."""
+    single = client.post("/predict", json=[VALID]).json()["predictions"][0]["price"]
+    batch = client.post("/predict", json=[VALID, VALID]).json()["predictions"]
+    assert [item["price"] for item in batch] == [single, single]
+
+
 def test_predict_request_id_echoed():
     r = client.post("/predict", json=[VALID], headers={"X-Request-ID": "test-123"})
     assert r.headers["X-Request-ID"] == "test-123"
     assert r.json()["requestId"] == "test-123"
+
+
+@pytest.mark.parametrize("request_id", ["", "contains spaces", "x" * 129, "line\nbreak"])
+def test_invalid_request_id_is_replaced(request_id):
+    r = client.get("/health", headers={"X-Request-ID": request_id})
+    generated = r.headers["X-Request-ID"]
+    assert generated != request_id
+    assert len(generated) == 36
 
 
 @pytest.mark.parametrize(
@@ -82,3 +97,11 @@ def test_error_gateway_headers():
     assert r.headers["X-Error-Code"] == "HPP-1001"
     assert r.headers["X-Error-Message"]
     assert r.headers["X-Request-ID"]
+    assert r.json()["requestId"] == r.headers["X-Request-ID"]
+
+
+def test_not_found_uses_uniform_error_contract():
+    r = client.get("/missing")
+    assert r.status_code == 404
+    assert r.headers["X-Error-Code"] == "HPP-1004"
+    assert r.json()["requestId"] == r.headers["X-Request-ID"]

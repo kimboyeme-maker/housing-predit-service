@@ -17,7 +17,8 @@ Interactive docs: **`/docs`** (Swagger) · **`/redoc`**.
 
 - `POST /predict` always takes a JSON **array** of feature objects and returns an array of
   predictions (a single prediction is a one-element array).
-- Every response carries an **`X-Request-ID`** header (echoed from the request if supplied).
+- Every response carries an **`X-Request-ID`** header. Safe caller IDs (`[A-Za-z0-9._:-]`, max
+  128 characters) are echoed; missing/invalid values become a canonical UUIDv4.
 - Errors use a uniform envelope **and** gateway headers the frontend consumes:
   ```json
   { "error": { "code": "HPP-1001", "message": "...", "details": [...] }, "requestId": "..." }

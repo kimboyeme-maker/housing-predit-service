@@ -1,5 +1,6 @@
 """Request middleware: assign/propagate requestId and emit an access log line."""
 
+import re
 import time
 import uuid
 
@@ -11,12 +12,19 @@ from app.core.logging import get_logger, request_id_ctx
 logger = get_logger("app.access")
 
 REQUEST_ID_HEADER = "X-Request-ID"
+_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+
+
+def _request_id(inbound: str | None) -> str:
+    """Reuse a safe caller ID; otherwise issue a canonical UUIDv4 string."""
+    if inbound and _REQUEST_ID_PATTERN.fullmatch(inbound):
+        return inbound
+    return str(uuid.uuid4())
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Reuse an inbound requestId if the caller provided one, else generate.
-        request_id = request.headers.get(REQUEST_ID_HEADER) or uuid.uuid4().hex
+        request_id = _request_id(request.headers.get(REQUEST_ID_HEADER))
         token = request_id_ctx.set(request_id)
         start = time.perf_counter()
         status = 500
