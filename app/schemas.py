@@ -44,6 +44,7 @@ class HouseFeatures(BaseModel):
 
 
 class PredictionItem(BaseModel):
+    """One prediction paired with its normalized source features."""
     price: float = Field(
         ..., description="Predicted price in currency units.", examples=[241300.55]
     )
@@ -51,20 +52,22 @@ class PredictionItem(BaseModel):
 
 
 class PredictResponse(BaseModel):
+    """Batch prediction envelope with model traceability."""
     model_config = {"protected_namespaces": ()}
 
     predictions: list[PredictionItem]
     model_version: str | None = Field(None, description="Version of the model that produced these.")
-    requestId: str | None = Field(None, description="Correlates with the X-Request-ID header/logs.")
 
 
 class FeatureStat(BaseModel):
+    """Training distribution summary for a single feature."""
     min: float
     max: float
     mean: float
 
 
 class Metrics(BaseModel):
+    """Held-out and cross-validation metrics emitted during training."""
     r2: float
     mae: float
     rmse: float
@@ -74,6 +77,7 @@ class Metrics(BaseModel):
 
 
 class ModelInfoResponse(BaseModel):
+    """Public model provenance, parameters, metrics, and feature ranges."""
     model_config = {"protected_namespaces": ()}
 
     model_type: str = Field(..., examples=["LinearRegression"])
@@ -89,6 +93,7 @@ class ModelInfoResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
+    """Liveness/readiness payload consumed by Docker and the portal."""
     model_config = {"protected_namespaces": ()}
 
     status: str = Field(
@@ -100,6 +105,7 @@ class HealthResponse(BaseModel):
 
 
 class ErrorDetail(BaseModel):
+    """Machine code, safe user message, and optional structured context."""
     code: str = Field(..., examples=["HPP-1001"])
     message: str
     details: list[dict] = []
@@ -109,4 +115,3 @@ class ErrorEnvelope(BaseModel):
     """Uniform error shape returned for every non-2xx response."""
 
     error: ErrorDetail
-    requestId: str | None = None

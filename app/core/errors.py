@@ -1,8 +1,9 @@
 """Designed error codes + uniform error envelope + global exception handlers.
 
 Every error response has the shape:
-    {"error": {"code": "HPP-xxxx", "message": "...", "details": [...]}, "requestId": "..."}
+    {"error": {"code": "HPP-xxxx", "message": "...", "details": [...]}}
 so clients can branch on a stable machine-readable code instead of parsing prose.
+Request correlation remains exclusively in the X-Request-ID response header.
 """
 
 from enum import StrEnum
@@ -12,12 +13,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.logging import get_logger, get_request_id
+from app.core.logging import get_logger
 
 logger = get_logger("app.errors")
 
 
 class ErrorCode(StrEnum):
+    """Stable machine-readable errors consumed by browser and gateway clients."""
     VALIDATION = "HPP-1001"       # bad/malformed input features
     MODEL_NOT_LOADED = "HPP-1002"  # artifacts missing/corrupt at startup
     INFERENCE_FAILED = "HPP-1003"  # model raised during predict
@@ -58,21 +60,16 @@ def _header_safe(text: str) -> str:
 
 def _error_response(status_code: int, code: str, message: str, details: list) -> JSONResponse:
     """Build the uniform error body AND set the gateway headers the frontend reads."""
-    request_id = get_request_id()
-    body = {
-        "error": {"code": code, "message": message, "details": details},
-        "requestId": request_id,
-    }
+    body = {"error": {"code": code, "message": message, "details": details}}
     headers = {
         "X-Error-Code": code,
         "X-Error-Message": _header_safe(message),
     }
-    if request_id:
-        headers["X-Request-ID"] = request_id
     return JSONResponse(status_code=status_code, content=body, headers=headers)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    """Translate framework and application exceptions into one public contract."""
     @app.exception_handler(HppError)
     async def _hpp(_: Request, exc: HppError):
         logger.warning("handled error %s: %s", exc.code.value, exc.message)

@@ -9,6 +9,7 @@ _APP_DIR = Path(__file__).resolve().parent
 
 
 class Settings(BaseSettings):
+    """Environment-backed runtime configuration for API and model artifacts."""
     model_config = SettingsConfigDict(env_prefix="HPP_", env_file=".env", extra="ignore")
 
     app_name: str = "Housing Price Prediction API"
@@ -30,4 +31,5 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    """Return one cached settings instance for the process lifetime."""
     return Settings()

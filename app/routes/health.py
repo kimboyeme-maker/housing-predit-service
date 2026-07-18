@@ -23,6 +23,7 @@ _STARTED_AT = time.time()
     ),
 )
 def health() -> HealthResponse:
+    """Return service readiness, model version, and process uptime."""
     bundle = get_bundle()
     return HealthResponse(
         status="ok" if bundle.is_loaded else "degraded",

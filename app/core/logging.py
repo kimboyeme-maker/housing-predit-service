@@ -14,6 +14,7 @@ request_id_ctx: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 
 def get_request_id() -> str | None:
+    """Read the request correlation ID bound by middleware in this async context."""
     return request_id_ctx.get()
 
 
@@ -53,4 +54,5 @@ def configure_logging(level: str = "INFO") -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
+    """Return a named logger routed through the configured JSON root handler."""
     return logging.getLogger(name)

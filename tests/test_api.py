@@ -19,6 +19,7 @@ VALID = {
 
 
 def test_health_ok():
+    """Healthy artifacts must produce a traceable readiness response."""
     r = client.get("/health")
     assert r.status_code == 200
     body = r.json()
@@ -28,6 +29,7 @@ def test_health_ok():
 
 
 def test_model_info():
+    """Model metadata must expose all trained feature coefficients."""
     r = client.get("/model-info")
     assert r.status_code == 200
     body = r.json()
@@ -38,15 +40,18 @@ def test_model_info():
 
 
 def test_predict_single():
+    """A one-row batch must produce one positive prediction."""
     r = client.post("/predict", json=[VALID])
     assert r.status_code == 200
     body = r.json()
     assert len(body["predictions"]) == 1
     assert body["predictions"][0]["price"] > 0
-    assert body["requestId"]
+    assert "requestId" not in body
+    assert r.headers["X-Request-ID"]
 
 
 def test_predict_batch():
+    """Batch cardinality must be preserved by the API."""
     r = client.post("/predict", json=[VALID, VALID])
     assert r.status_code == 200
     assert len(r.json()["predictions"]) == 2
@@ -60,13 +65,15 @@ def test_single_and_batch_paths_produce_equivalent_predictions():
 
 
 def test_predict_request_id_echoed():
+    """Safe caller correlation IDs must survive header and body propagation."""
     r = client.post("/predict", json=[VALID], headers={"X-Request-ID": "test-123"})
     assert r.headers["X-Request-ID"] == "test-123"
-    assert r.json()["requestId"] == "test-123"
+    assert "requestId" not in r.json()
 
 
 @pytest.mark.parametrize("request_id", ["", "contains spaces", "x" * 129, "line\nbreak"])
 def test_invalid_request_id_is_replaced(request_id):
+    """Unsafe or oversized correlation IDs must be replaced with UUIDv4."""
     r = client.get("/health", headers={"X-Request-ID": request_id})
     generated = r.headers["X-Request-ID"]
     assert generated != request_id
@@ -78,6 +85,7 @@ def test_invalid_request_id_is_replaced(request_id):
     [("school_rating", 99), ("bedrooms", -1), ("year_built", 1000)],
 )
 def test_predict_validation_error(field, value):
+    """Domain violations must use the stable validation error code."""
     bad = {**VALID, field: value}
     r = client.post("/predict", json=[bad])
     assert r.status_code == 422
@@ -85,6 +93,7 @@ def test_predict_validation_error(field, value):
 
 
 def test_empty_batch_rejected():
+    """Prediction entry guard must reject empty work units."""
     r = client.post("/predict", json=[])
     assert r.status_code == 422
 
@@ -97,11 +106,13 @@ def test_error_gateway_headers():
     assert r.headers["X-Error-Code"] == "HPP-1001"
     assert r.headers["X-Error-Message"]
     assert r.headers["X-Request-ID"]
-    assert r.json()["requestId"] == r.headers["X-Request-ID"]
+    assert "requestId" not in r.json()
 
 
 def test_not_found_uses_uniform_error_contract():
+    """Framework 404 responses must use the same traceable error envelope."""
     r = client.get("/missing")
     assert r.status_code == 404
     assert r.headers["X-Error-Code"] == "HPP-1004"
-    assert r.json()["requestId"] == r.headers["X-Request-ID"]
+    assert r.headers["X-Request-ID"]
+    assert "requestId" not in r.json()

@@ -23,24 +23,29 @@ logger = get_logger("app.ml.loader")
 
 @dataclass
 class ModelBundle:
+    """In-memory estimator plus metadata or a captured startup failure."""
     model: Any | None = None
     metadata: dict = field(default_factory=dict)
     error: str | None = None
 
     @property
     def is_loaded(self) -> bool:
+        """Report readiness only when both estimator and metadata are present."""
         return self.model is not None and bool(self.metadata)
 
     @property
     def version(self) -> str | None:
+        """Return artifact version for responses and audit logs."""
         return self.metadata.get("version")
 
     @property
     def features(self) -> list[str]:
+        """Preserve training feature order for inference matrix construction."""
         return list(self.metadata.get("features", []))
 
     @property
     def feature_stats(self) -> dict[str, dict]:
+        """Expose training ranges used by clients for hints and validation."""
         return self.metadata.get("feature_stats", {})
 
 
@@ -76,4 +81,5 @@ def load_bundle(force: bool = False) -> ModelBundle:
 
 
 def get_bundle() -> ModelBundle:
+    """Return the lazily loaded process-wide model bundle."""
     return load_bundle()

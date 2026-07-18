@@ -21,6 +21,7 @@ router = APIRouter(tags=["model"])
     ),
 )
 def model_info() -> ModelInfoResponse:
+    """Return validated model metadata or a designed unavailable error."""
     bundle = get_bundle()
     if not bundle.is_loaded:
         raise HppError(

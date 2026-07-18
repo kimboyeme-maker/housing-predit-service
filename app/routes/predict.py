@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Body
 
-from app.core.logging import get_request_id
 from app.ml.loader import get_bundle
 from app.ml.predictor import predict as run_predict
 from app.schemas import ErrorEnvelope, HouseFeatures, PredictionItem, PredictResponse
@@ -49,6 +48,7 @@ _EXAMPLE_BATCH = [
 def predict(
     items: list[HouseFeatures] = Body(..., min_length=1, examples=[_EXAMPLE_BATCH]),  # noqa: B008
 ) -> PredictResponse:
+    """Validate and predict a non-empty batch while preserving input order."""
     rows = [it.model_dump() for it in items]
     prices = run_predict(rows)
     predictions = [
@@ -57,5 +57,4 @@ def predict(
     return PredictResponse(
         predictions=predictions,
         model_version=get_bundle().version,
-        requestId=get_request_id(),
     )

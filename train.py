@@ -42,6 +42,7 @@ MODEL_VERSION = "1"
 
 
 def main() -> None:
+    """Train, evaluate, and write the deployable model artifacts."""
     df = pd.read_csv(DATASET)
     X = df[FEATURES].astype(float)
     y = df[TARGET].astype(float)

@@ -23,7 +23,10 @@ def _request_id(inbound: str | None) -> str:
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
+    """Bind a safe request ID and emit one access record for every HTTP request."""
+
     async def dispatch(self, request: Request, call_next):
+        """Propagate request context through the downstream ASGI call."""
         request_id = _request_id(request.headers.get(REQUEST_ID_HEADER))
         token = request_id_ctx.set(request_id)
         start = time.perf_counter()

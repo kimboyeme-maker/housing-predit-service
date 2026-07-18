@@ -1,15 +1,15 @@
-# Backend-only compose for local run / VPS deployment.
-# Frontend is deployed separately (Vercel) and points at this service via VITE_API_URL.
+# Backend-only compose for local run. VPS production should bind the API to loopback
+# behind Caddy as documented in README.md.
 services:
   api:
     build: .
-    image: ghcr.io/kimboyeme-maker/housing-price-predit:latest
+    image: ghcr.io/kimboyeme-maker/housing-predit-service:latest
     container_name: housing-price-api
     ports:
       - "8000:8000"
     environment:
       HPP_LOG_LEVEL: INFO
-      # Restrict CORS to your frontend origin in production, e.g. https://your-app.vercel.app
+      # Restrict CORS to your frontend origin in production, e.g. https://your-app.netlify.app
       HPP_CORS_ORIGINS: "*"
     restart: unless-stopped
     healthcheck:

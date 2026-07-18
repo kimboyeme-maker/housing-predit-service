@@ -38,6 +38,7 @@ TAGS_METADATA = [
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    """Load model artifacts before serving while allowing degraded health mode."""
     bundle = load_bundle()
     if bundle.is_loaded:
         logger.info("startup complete", extra={"model_version": bundle.version})
@@ -73,4 +74,5 @@ app.include_router(predict.router)
 
 @app.get("/", include_in_schema=False)
 def root():
+    """Expose lightweight service discovery without duplicating Swagger metadata."""
     return {"service": settings.app_name, "docs": "/docs", "health": "/health"}
